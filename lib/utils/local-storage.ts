@@ -77,3 +77,62 @@ export function loadTheme(): "light" | "dark" | null {
     return null;
   }
 }
+
+// ── Search ────────────────────────────────────────────────
+
+/**
+ * Searches story history by query string.
+ * Matches against: title, topic, summary, moralLesson, educationalValues.
+ * Returns stories sorted by relevance (title match first, then others).
+ */
+export function searchHistory(query: string): StoryPackage[] {
+  const all = loadHistory();
+  if (!query || query.trim().length === 0) return all;
+
+  const q = query.trim().toLowerCase();
+  const terms = q.split(/\s+/).filter(Boolean);
+
+  function score(pkg: StoryPackage): number {
+    let s = 0;
+    const titleLower = pkg.title?.toLowerCase() ?? "";
+    const topicLower = pkg.topic?.toLowerCase() ?? "";
+    const summaryLower = pkg.summary?.toLowerCase() ?? "";
+    const moralLower = pkg.moralLesson?.toLowerCase() ?? "";
+    const valuesStr = (pkg.educationalValues ?? []).join(" ").toLowerCase();
+    const ageLower = pkg.ageCategory?.toLowerCase() ?? "";
+
+    for (const term of terms) {
+      if (titleLower.includes(term)) s += 10;
+      if (topicLower.includes(term)) s += 8;
+      if (ageLower.includes(term)) s += 6;
+      if (valuesStr.includes(term)) s += 5;
+      if (summaryLower.includes(term)) s += 3;
+      if (moralLower.includes(term)) s += 2;
+    }
+    return s;
+  }
+
+  return all
+    .map((pkg) => ({ pkg, score: score(pkg) }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(({ pkg }) => pkg);
+}
+
+/**
+ * Returns unique age categories present in history.
+ */
+export function getHistoryAgeFilters(): string[] {
+  const all = loadHistory();
+  const cats = new Set(all.map((s) => s.ageCategory));
+  return Array.from(cats).sort();
+}
+
+/**
+ * Filters history by age category.  Pass null to get all.
+ */
+export function filterHistoryByAge(age: string | null): StoryPackage[] {
+  const all = loadHistory();
+  if (!age) return all;
+  return all.filter((s) => s.ageCategory === age);
+}
