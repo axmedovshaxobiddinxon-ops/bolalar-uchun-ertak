@@ -184,7 +184,7 @@ export function StoryOutput({ pkg }: StoryOutputProps) {
       )}
 
       {/* ── Image Prompts ── */}
-      <ImagePromptsSection imagePrompts={pkg.imagePrompts} />
+      <ImagePromptsSection imagePrompts={pkg.imagePrompts} pkg={pkg} />
 
       {/* ── Video Scenes ── */}
       <VideoScenesSection videoScenes={pkg.videoScenes} />

@@ -1,82 +1,139 @@
 // ============================================================
 // Character Consistency Manager
-// Ensures all image prompts include the correct character visualSeeds
+// Ensures every image prompt includes:
+//  1. A precise visual seed for each character in the scene
+//  2. The Disney Pixar style suffix
+//  3. Consistent negative guidance (no text, no watermarks)
 // ============================================================
 
 import type { Character, ImagePrompt, StoryPackage } from "@/types";
 
-const STYLE_SUFFIX =
-  "warm watercolor illustration, child-friendly, Uzbek cultural setting, soft warm colours, storybook art style, no text overlay, no words in image, clean background";
+// ── Style constants ───────────────────────────────────────
 
 /**
- * Builds a character reference string from a visualSeed.
- * e.g. "Karim: a 7-year-old Uzbek boy with dark hair, wearing a blue doppi hat"
+ * Core Disney Pixar 3D style that is appended to EVERY image prompt.
+ * Chosen to produce warm, child-safe, visually consistent illustrations.
  */
-function buildCharacterReference(character: Character): string {
-  return `${character.name} — ${character.visualSeed}`;
+export const PIXAR_STYLE =
+  "Disney Pixar 3D animation style, vibrant warm colours, soft volumetric lighting, " +
+  "expressive friendly characters, child-safe storybook illustration, " +
+  "clean simple background, high detail, no text or letters in image, " +
+  "no watermarks, no borders";
+
+/**
+ * Negative prompt injected as a trailing instruction in each prompt.
+ * Helps suppress content that breaks the look or safety requirements.
+ */
+const NEGATIVE_GUIDANCE =
+  "avoid: horror elements, violence, scary faces, adult content, realistic photo, " +
+  "dark gloomy lighting, text, watermarks, logos";
+
+// ── Helpers ───────────────────────────────────────────────
+
+/**
+ * Builds a compact but unambiguous English visual seed string for a character.
+ * Used verbatim in every image prompt that features this character.
+ *
+ * Example output:
+ *   "Karim: a 7-year-old Uzbek boy with short dark hair and warm brown eyes,
+ *    wearing a traditional blue doppi hat and a green chapan coat, friendly smile"
+ */
+function buildVisualSeed(character: Character): string {
+  return `${character.name}: ${character.visualSeed}`;
 }
 
 /**
- * Given a list of image prompts and the full character roster,
- * injects the visualSeed for every character referenced in each prompt.
- * Also appends the shared style suffix.
+ * Strips any previous style suffix from a prompt so we never double-append.
+ */
+function stripStyleSuffix(prompt: string): string {
+  return prompt
+    .replace(/,?\s*Disney Pixar.*?image[^,]*/gi, "")
+    .replace(/,?\s*warm watercolor.*$/i, "")
+    .replace(/,?\s*child-friendly.*$/i, "")
+    .replace(/,?\s*storybook art style.*$/i, "")
+    .replace(/,?\s*no text overlay.*$/i, "")
+    .trim()
+    .replace(/,+$/, "")
+    .trim();
+}
+
+// ── Core functions ────────────────────────────────────────
+
+/**
+ * Injects character visual seeds and the Pixar style suffix into every
+ * ImagePrompt in the list.
+ *
+ * Prompt structure:
+ *   [CHARACTERS: <seed1>; <seed2>] <base scene description>,
+ *   <Pixar style suffix>.
+ *   Negative: <negative guidance>.
  */
 export function injectCharacterSeeds(
   imagePrompts: ImagePrompt[],
   characters: Character[]
 ): ImagePrompt[] {
+  // Build a case-insensitive lookup: "karim" → Character
   const characterMap = new Map<string, Character>(
-    characters.map((c) => [c.name.toLowerCase(), c])
+    characters.map((c) => [c.name.toLowerCase().trim(), c])
   );
 
   return imagePrompts.map((prompt) => {
-    // Find which characters appear in this scene
-    const sceneCharacters = prompt.characters
-      .map((name) => characterMap.get(name.toLowerCase()))
-      .filter((c): c is Character => c !== undefined);
+    // 1. Strip any existing style suffix so we start clean
+    const basePrompt = stripStyleSuffix(prompt.prompt);
 
-    if (sceneCharacters.length === 0) {
-      // No named characters — just add style suffix
-      const cleanPrompt = prompt.prompt.replace(/,?\s*warm watercolor.*$/i, "").trim();
-      return {
-        ...prompt,
-        prompt: `${cleanPrompt}, ${STYLE_SUFFIX}`,
-      };
+    // 2. Resolve characters that appear in this scene
+    const sceneCharacters: Character[] = [];
+
+    // Try exact match first, then partial match
+    for (const nameInPrompt of prompt.characters) {
+      const lower = nameInPrompt.toLowerCase().trim();
+      const exact = characterMap.get(lower);
+      if (exact) {
+        sceneCharacters.push(exact);
+        continue;
+      }
+      // Partial match: character whose name appears within the prompt name
+      for (const [key, char] of characterMap) {
+        if (lower.includes(key) || key.includes(lower)) {
+          sceneCharacters.push(char);
+          break;
+        }
+      }
     }
 
-    // Build character seed prefix
-    const characterSeeds = sceneCharacters
-      .map((c) => buildCharacterReference(c))
-      .join("; ");
+    // 3. Build character seed block
+    const characterBlock =
+      sceneCharacters.length > 0
+        ? `[CHARACTERS: ${sceneCharacters.map(buildVisualSeed).join("; ")}] `
+        : "";
 
-    // Strip any existing style suffix to avoid duplication
-    const basePrompt = prompt.prompt.replace(/,?\s*warm watercolor.*$/i, "").trim();
-
-    const enrichedPrompt = `[Characters: ${characterSeeds}] ${basePrompt}, ${STYLE_SUFFIX}`;
+    // 4. Assemble final prompt
+    const finalPrompt =
+      `${characterBlock}${basePrompt}, ${PIXAR_STYLE}. Negative: ${NEGATIVE_GUIDANCE}`;
 
     return {
       ...prompt,
-      prompt: enrichedPrompt,
+      prompt: finalPrompt,
     };
   });
 }
 
 /**
- * Validates that all characters referenced in imagePrompts
- * have a corresponding entry in the characters array.
- * Returns names of any missing characters.
+ * Returns the names of characters referenced in imagePrompts that have
+ * no matching entry in the characters array.
  */
 export function findMissingCharacterSeeds(
   imagePrompts: ImagePrompt[],
   characters: Character[]
 ): string[] {
-  const characterNames = new Set(characters.map((c) => c.name.toLowerCase()));
+  const known = new Set(characters.map((c) => c.name.toLowerCase().trim()));
   const missing: string[] = [];
 
   for (const prompt of imagePrompts) {
     for (const name of prompt.characters) {
-      if (!characterNames.has(name.toLowerCase())) {
-        if (!missing.includes(name)) missing.push(name);
+      const lower = name.toLowerCase().trim();
+      if (!known.has(lower) && !missing.includes(name)) {
+        missing.push(name);
       }
     }
   }
@@ -86,17 +143,29 @@ export function findMissingCharacterSeeds(
 
 /**
  * Post-processes a full StoryPackage to apply character consistency
- * across all image prompts.
+ * across all image prompts.  Used by the story orchestrator (Phase 1)
+ * and also called before sending prompts to the image API (Phase 3).
  */
 export function applyCharacterConsistency(pkg: StoryPackage): StoryPackage {
-  if (!pkg.characters?.length || !pkg.imagePrompts?.length) {
-    return pkg;
-  }
+  if (!pkg.imagePrompts?.length) return pkg;
 
-  const enrichedImagePrompts = injectCharacterSeeds(pkg.imagePrompts, pkg.characters);
+  const characters = pkg.characters ?? [];
+  const enrichedPrompts = injectCharacterSeeds(pkg.imagePrompts, characters);
 
-  return {
-    ...pkg,
-    imagePrompts: enrichedImagePrompts,
-  };
+  return { ...pkg, imagePrompts: enrichedPrompts };
+}
+
+/**
+ * Builds a single enriched prompt string for a specific scene, ready
+ * to be sent to the image API.
+ */
+export function buildImagePromptForScene(
+  sceneIndex: number,
+  pkg: StoryPackage
+): string | null {
+  const prompt = pkg.imagePrompts.find((p) => p.scene === sceneIndex);
+  if (!prompt) return null;
+
+  const [enriched] = injectCharacterSeeds([prompt], pkg.characters ?? []);
+  return enriched?.prompt ?? null;
 }

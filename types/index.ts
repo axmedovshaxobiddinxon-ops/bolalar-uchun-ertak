@@ -153,18 +153,64 @@ export interface TextAIProvider {
   generateStory(systemPrompt: string, userPrompt: string): Promise<string>;
 }
 
-/** Phase 3 — not yet implemented */
+// ── Phase 3: AI Image Generation ─────────────────────────
+
 export interface ImageOptions {
-  size: string;
-  quality: string;
-  style: string;
+  size: "1024x1024" | "1792x1024" | "1024x1792";
+  quality: "standard" | "hd" | "low" | "medium" | "high" | "auto";
+  style?: "vivid" | "natural";
+  /** Background transparency — only for gpt-image-1 */
+  background?: "transparent" | "opaque" | "auto";
 }
 
 export interface ImageResult {
-  url: string;
-  promptUsed: string;
+  /** scene index (1-based), matching ImagePrompt.scene */
   sceneIndex: number;
+  promptUsed: string;
+  /** base64-encoded PNG data URL: "data:image/png;base64,..." */
+  dataUrl: string;
+  /** Width in pixels */
+  width: number;
+  /** Height in pixels */
+  height: number;
+  /** Which model generated this */
+  model: string;
+  /** ISO timestamp */
+  generatedAt: string;
 }
+
+export type ImageGenerationStatus =
+  | "idle"
+  | "generating"   // currently generating one or more images
+  | "partial"       // some done, some still pending or errored
+  | "done"          // all images generated successfully
+  | "error";        // all failed
+
+export interface ImageGenerationState {
+  status: ImageGenerationStatus;
+  /** Results indexed by sceneIndex (1-based) */
+  images: Record<number, ImageResult>;
+  /** Per-scene generation status */
+  sceneStatus: Record<number, "idle" | "generating" | "done" | "error">;
+  /** Per-scene error messages */
+  sceneErrors: Record<number, string>;
+  /** Total scenes to generate */
+  total: number;
+  /** How many have finished (done or error) */
+  completed: number;
+  /** Global error message */
+  errorMessage: string | null;
+}
+
+export const INITIAL_IMAGE_STATE: ImageGenerationState = {
+  status: "idle",
+  images: {},
+  sceneStatus: {},
+  sceneErrors: {},
+  total: 0,
+  completed: 0,
+  errorMessage: null,
+};
 
 export interface ImageAIProvider {
   name: string;
@@ -206,6 +252,9 @@ export interface AppState {
   // Output
   storyPackage: StoryPackage | null;
 
+  // Phase 3: image generation state
+  imageState: ImageGenerationState;
+
   // History (persisted to localStorage)
   history: StoryPackage[];
 
@@ -227,4 +276,10 @@ export type AppAction =
   | { type: "LOAD_HISTORY"; payload: StoryPackage[] }
   | { type: "CLEAR_OUTPUT" }
   | { type: "SET_THEME"; payload: "light" | "dark" }
-  | { type: "SET_ACTIVE_SECTION"; payload: string | null };
+  | { type: "SET_ACTIVE_SECTION"; payload: string | null }
+  // ── Phase 3: image generation ──────────────────────────
+  | { type: "IMAGES_START"; payload: { total: number } }
+  | { type: "IMAGE_SCENE_GENERATING"; payload: { sceneIndex: number } }
+  | { type: "IMAGE_SCENE_DONE"; payload: { sceneIndex: number; result: ImageResult } }
+  | { type: "IMAGE_SCENE_ERROR"; payload: { sceneIndex: number; error: string } }
+  | { type: "IMAGES_RESET" };
