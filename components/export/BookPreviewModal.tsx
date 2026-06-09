@@ -133,7 +133,7 @@ function TocPageView({ book }: { book: Book }) {
   );
 }
 
-function StoryPageView({ page }: { page: BookPage }) {
+function StoryPageView({ page, imageMap = {} }: { page: BookPage; imageMap?: Record<number, string> }) {
   const meta = PAGE_META[page.type];
   const Icon = meta.icon;
 
@@ -141,6 +141,22 @@ function StoryPageView({ page }: { page: BookPage }) {
     .split(/\n+/)
     .map((p) => p.trim())
     .filter(Boolean);
+
+  // Pick an illustration for this story page type
+  const sceneKeys = Object.keys(imageMap).map(Number).sort((a, b) => a - b);
+  let illustrationUrl: string | null = null;
+  if (sceneKeys.length > 0) {
+    if (page.type === "story-opening") {
+      illustrationUrl = imageMap[sceneKeys[0]] ?? null;
+    } else if (page.type === "story-closing") {
+      illustrationUrl = imageMap[sceneKeys[sceneKeys.length - 1]] ?? null;
+    } else if (page.type === "story-body") {
+      const midScenes = sceneKeys.slice(1, -1);
+      if (midScenes.length > 0) {
+        illustrationUrl = imageMap[midScenes[0]] ?? null;
+      }
+    }
+  }
 
   return (
     <div className="p-6 sm:p-8 h-full overflow-y-auto">
@@ -157,6 +173,19 @@ function StoryPageView({ page }: { page: BookPage }) {
           {page.subtitle}
         </h2>
       )}
+
+      {/* Inline illustration */}
+      {illustrationUrl && (
+        <div className="float-right ml-4 mb-3 w-2/5 rounded-2xl overflow-hidden shadow-md border border-amber-100 dark:border-gray-700">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={illustrationUrl}
+            alt="Sahna rasmi"
+            className="w-full h-auto object-cover"
+          />
+        </div>
+      )}
+
       {/* Body text */}
       <div className="prose prose-sm dark:prose-invert max-w-none">
         {paragraphs.map((para, i) => (
@@ -168,6 +197,7 @@ function StoryPageView({ page }: { page: BookPage }) {
           </p>
         ))}
       </div>
+      <div className="clear-both" />
     </div>
   );
 }
@@ -248,7 +278,41 @@ function CharactersPageView({ page }: { page: BookPage }) {
   );
 }
 
-function ImagePromptsPageView({ page }: { page: BookPage }) {
+function ImagePromptsPageView({ page, imageMap = {} }: { page: BookPage; imageMap?: Record<number, string> }) {
+  const sceneKeys = Object.keys(imageMap).map(Number).sort((a, b) => a - b);
+  const hasImages = sceneKeys.length > 0;
+
+  if (hasImages) {
+    return (
+      <div className="p-6 sm:p-8 h-full overflow-y-auto">
+        <h2 className="font-display font-bold text-xl text-purple-700 dark:text-purple-400 mb-5 flex items-center gap-2">
+          <ImageIcon size={18} /> Rasm Galereyasi
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
+          {sceneKeys.map((sceneIndex) => {
+            const url = imageMap[sceneIndex];
+            return (
+              <div key={sceneIndex} className="rounded-2xl overflow-hidden border border-purple-100 dark:border-purple-900">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt={`Sahna ${sceneIndex}`}
+                  className="w-full h-auto object-cover"
+                  loading="lazy"
+                />
+                <div className="bg-purple-50 dark:bg-purple-900/20 px-3 py-1.5">
+                  <p className="text-xs font-bold text-purple-700 dark:text-purple-400">
+                    Sahna {sceneIndex}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   const blocks = page.content.split(/\n{2,}/).filter(Boolean);
   return (
     <div className="p-6 sm:p-8 h-full overflow-y-auto">
@@ -332,7 +396,7 @@ function GenericPageView({ page }: { page: BookPage }) {
 
 // ── Page view dispatcher ──────────────────────────────────
 
-function PageView({ page, book }: { page: BookPage; book: Book }) {
+function PageView({ page, book, imageMap = {} }: { page: BookPage; book: Book; imageMap?: Record<number, string> }) {
   switch (page.type) {
     case "cover":          return <CoverPageView page={page} book={book} />;
     case "author":         return <AuthorPageView page={page} />;
@@ -340,10 +404,10 @@ function PageView({ page, book }: { page: BookPage; book: Book }) {
     case "dedication":     return <GenericPageView page={page} />;
     case "story-opening":
     case "story-body":
-    case "story-closing":  return <StoryPageView page={page} />;
+    case "story-closing":  return <StoryPageView page={page} imageMap={imageMap} />;
     case "moral":          return <MoralPageView page={page} />;
     case "characters":     return <CharactersPageView page={page} />;
-    case "image-prompts":  return <ImagePromptsPageView page={page} />;
+    case "image-prompts":  return <ImagePromptsPageView page={page} imageMap={imageMap} />;
     case "hashtags":       return <HashtagsPageView page={page} />;
     case "back-cover":     return <BackCoverView page={page} book={book} />;
     default:               return <GenericPageView page={page} />;
@@ -359,6 +423,8 @@ interface BookPreviewModalProps {
   onExportPdf: () => void;
   onExportDocx: () => void;
   exporting: boolean;
+  /** Optional map sceneIndex → dataUrl for showing images inline */
+  imageMap?: Record<number, string>;
 }
 
 export function BookPreviewModal({
@@ -368,6 +434,7 @@ export function BookPreviewModal({
   onExportPdf,
   onExportDocx,
   exporting,
+  imageMap = {},
 }: BookPreviewModalProps) {
   const [book, setBook] = useState<Book | null>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -449,6 +516,11 @@ export function BookPreviewModal({
                 </p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">
                   {book.totalPages} sahifa · {book.totalWords} so&apos;z
+                  {Object.keys(imageMap).length > 0 && (
+                    <span className="ml-2 text-amber-500 font-semibold">
+                      · 🖼️ {Object.keys(imageMap).length} rasm
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -554,7 +626,7 @@ export function BookPreviewModal({
                 </div>
               )}
               <div className="h-full overflow-y-auto">
-                <PageView page={currentPage} book={book} />
+                <PageView page={currentPage} book={book} imageMap={imageMap} />
               </div>
             </div>
           </div>

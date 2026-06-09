@@ -11,7 +11,7 @@ export const RATE_LIMITS = {
     requests: 30,
     windowMs: 60_000,
   },
-  /** Phase 3 */
+  /** Phase 3 — each call may generate multiple images */
   generateImages: {
     requests: 5,
     windowMs: 60_000,

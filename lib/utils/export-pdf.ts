@@ -10,6 +10,10 @@
 import type { StoryPackage } from "@/types";
 import { generateBook, type Book, type BookPage } from "./book-generator";
 
+// ── Image map type ────────────────────────────────────────
+// Maps sceneIndex (1-based) → base64 data URL ("data:image/png;base64,…")
+export type ImageMap = Record<number, string>;
+
 // ── Config ────────────────────────────────────────────────
 
 const PAGE_W = 210; // A4 width mm
@@ -43,6 +47,33 @@ export type PdfProgressCallback = (step: string, percent: number) => void;
 async function getJsPDF() {
   const { jsPDF } = await import("jspdf");
   return jsPDF;
+}
+
+// ── Image helper ──────────────────────────────────────────
+
+/**
+ * Adds a base64 image to the PDF page.
+ * jsPDF.addImage accepts a data URL directly.
+ * imageMap key is the sceneIndex (1-based) matching ImagePrompt.scene.
+ */
+function addSceneImage(
+  doc: JsPDFInstance,
+  sceneIndex: number,
+  imageMap: ImageMap,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+): boolean {
+  const dataUrl = imageMap[sceneIndex];
+  if (!dataUrl) return false;
+  try {
+    doc.addImage(dataUrl, "PNG", x, y, w, h, undefined, "FAST");
+    return true;
+  } catch {
+    // Image rendering failed — skip gracefully
+    return false;
+  }
 }
 
 // ── Drawing primitives ────────────────────────────────────
@@ -383,7 +414,7 @@ function renderDedicationPage(doc: JsPDFInstance, page: BookPage, book: Book) {
   drawFooter(doc, page.pageNumber, book.title, book.totalPages);
 }
 
-function renderStoryPage(doc: JsPDFInstance, page: BookPage, book: Book) {
+function renderStoryPage(doc: JsPDFInstance, page: BookPage, book: Book, imageMap?: ImageMap) {
   decorativeCorners(doc);
 
   // Top accent bar
@@ -417,6 +448,47 @@ function renderStoryPage(doc: JsPDFInstance, page: BookPage, book: Book) {
     hRule(doc, textStartY + subLines.length * 8 + 2);
   }
 
+  // ── Inline illustration (if available for this story section) ──
+  // Map each story page type to a preferred scene index.
+  // story-opening → scene 1, story-closing → last scene, story-body → middle scenes
+  let imageInserted = false;
+  if (imageMap && Object.keys(imageMap).length > 0) {
+    const sceneKeys = Object.keys(imageMap).map(Number).sort((a, b) => a - b);
+    let targetScene: number | undefined;
+
+    if (page.type === "story-opening") {
+      targetScene = sceneKeys[0];
+    } else if (page.type === "story-closing") {
+      targetScene = sceneKeys[sceneKeys.length - 1];
+    } else if (page.type === "story-body") {
+      // Distribute body scenes: use the scene that matches the page's position
+      const bodyPageIdx = parseInt(page.title.match(/(\d+)\)$/)?.[1] ?? "1", 10) - 1;
+      const midScenes = sceneKeys.slice(1, -1);
+      targetScene = midScenes[bodyPageIdx % Math.max(1, midScenes.length)];
+    }
+
+    if (targetScene !== undefined) {
+      // Place image in a column on the right side of the page
+      const imgX = MARGIN + CONTENT_W * 0.52;
+      const imgY = page.type === "story-opening" && page.subtitle
+        ? textStartY + 20
+        : textStartY + 8;
+      const imgW = CONTENT_W * 0.45;
+      const imgH = imgW; // square
+
+      imageInserted = addSceneImage(doc, targetScene, imageMap, imgX, imgY, imgW, imgH);
+
+      if (imageInserted) {
+        // Draw a subtle rounded border around the image
+        setDraw(doc, COLOR.amberLight);
+        doc.setLineWidth(0.4);
+        doc.roundedRect(imgX, imgY, imgW, imgH, 3, 3, "S");
+        doc.setLineWidth(0.2);
+      }
+    }
+  }
+
+  const textWidth = imageInserted ? CONTENT_W * 0.48 : CONTENT_W;
   const bodyY =
     page.type === "story-opening" && page.subtitle
       ? textStartY +
@@ -431,15 +503,15 @@ function renderStoryPage(doc: JsPDFInstance, page: BookPage, book: Book) {
   const paragraphs = page.content.split(/\n{1,}/).filter(Boolean);
   let y = bodyY;
   for (const para of paragraphs) {
-    if (y > FOOTER_Y - 20) break; // safety: don't overflow into footer
-    const lines: string[] = doc.splitTextToSize(para, CONTENT_W);
+    if (y > FOOTER_Y - 20) break;
+    const lines: string[] = doc.splitTextToSize(para, textWidth);
     lines.forEach((line: string) => {
       if (y <= FOOTER_Y - 16) {
         doc.text(line, MARGIN, y);
         y += 6.5;
       }
     });
-    y += 3; // paragraph spacing
+    y += 3;
   }
 
   drawFooter(doc, page.pageNumber, book.title, book.totalPages);
@@ -571,7 +643,8 @@ function renderCharactersPage(doc: JsPDFInstance, page: BookPage, book: Book) {
 function renderImagePromptsPage(
   doc: JsPDFInstance,
   page: BookPage,
-  book: Book
+  book: Book,
+  imageMap?: ImageMap
 ) {
   decorativeCorners(doc);
 
@@ -584,47 +657,96 @@ function renderImagePromptsPage(
   setTextColor(doc, COLOR.black);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text("Rasm Tavsiflar", MARGIN + 12, 22);
+  doc.text("Rasm Galereyasi", MARGIN + 12, 22);
 
   hRule(doc, 28, [220, 200, 250] as [number, number, number]);
 
-  let y = 40;
-  const blocks = page.content.split(/\n{2,}/);
-  blocks.forEach((block) => {
-    const [sceneLine, promptLine] = block.split("\n");
-    if (!sceneLine) return;
+  const hasImages = imageMap && Object.keys(imageMap).length > 0;
 
-    // Scene label chip
-    setFill(doc, [240, 230, 255] as [number, number, number]);
-    const labelW = doc.getTextWidth(sceneLine) + 10;
-    roundedRect(doc, MARGIN, y - 4, Math.min(labelW, CONTENT_W), 7, 2);
+  if (hasImages && imageMap) {
+    // Grid layout: 2 columns × N rows of actual generated images
+    const imgW = (CONTENT_W - 6) / 2;
+    const imgH = imgW;
+    const sceneKeys = Object.keys(imageMap).map(Number).sort((a, b) => a - b);
+    const cols = 2;
+    const startY = 36;
+    const rowGap = 4;
+    const colGap = 6;
 
-    setTextColor(doc, [80, 20, 180] as [number, number, number]);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text(sceneLine, MARGIN + 4, y + 0.5);
+    sceneKeys.forEach((sceneIndex, idx) => {
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      const x = MARGIN + col * (imgW + colGap);
+      const y = startY + row * (imgH + rowGap + 10);
 
-    y += 8;
+      if (y + imgH > FOOTER_Y - 10) return; // don't overflow footer
 
-    // Prompt text in mono-style box
-    if (promptLine) {
-      const promptLines: string[] = doc.splitTextToSize(promptLine, CONTENT_W - 8);
-      const boxH = promptLines.length * 5.5 + 8;
-      setFill(doc, COLOR.grayLight);
-      roundedRect(doc, MARGIN, y, CONTENT_W, boxH, 3);
-      setTextColor(doc, COLOR.black);
-      doc.setFont("courier", "normal");
-      doc.setFontSize(8);
-      let py = y + 5;
-      promptLines.forEach((pl: string) => {
-        doc.text(pl, MARGIN + 4, py);
-        py += 5.5;
-      });
-      y += boxH + 5;
-    }
+      const inserted = addSceneImage(doc, sceneIndex, imageMap, x, y, imgW, imgH);
 
-    if (y > FOOTER_Y - 15) return;
-  });
+      if (inserted) {
+        // Border
+        setDraw(doc, COLOR.amberLight);
+        doc.setLineWidth(0.4);
+        doc.roundedRect(x, y, imgW, imgH, 3, 3, "S");
+        doc.setLineWidth(0.2);
+
+        // Scene label below image
+        setTextColor(doc, COLOR.gray);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.text(`Sahna ${sceneIndex}`, x + imgW / 2, y + imgH + 4, {
+          align: "center",
+        });
+      } else {
+        // Fallback: placeholder box
+        setFill(doc, COLOR.grayLight);
+        roundedRect(doc, x, y, imgW, imgH, 3);
+        setTextColor(doc, COLOR.gray);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(`Sahna ${sceneIndex}`, x + imgW / 2, y + imgH / 2, {
+          align: "center",
+        });
+      }
+    });
+  } else {
+    // No images — show prompt text list
+    let y = 40;
+    const blocks = page.content.split(/\n{2,}/);
+    blocks.forEach((block) => {
+      const [sceneLine, promptLine] = block.split("\n");
+      if (!sceneLine) return;
+
+      setFill(doc, [240, 230, 255] as [number, number, number]);
+      const labelW = doc.getTextWidth(sceneLine) + 10;
+      roundedRect(doc, MARGIN, y - 4, Math.min(labelW, CONTENT_W), 7, 2);
+
+      setTextColor(doc, [80, 20, 180] as [number, number, number]);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(sceneLine, MARGIN + 4, y + 0.5);
+
+      y += 8;
+
+      if (promptLine) {
+        const promptLines: string[] = doc.splitTextToSize(promptLine, CONTENT_W - 8);
+        const boxH = promptLines.length * 5.5 + 8;
+        setFill(doc, COLOR.grayLight);
+        roundedRect(doc, MARGIN, y, CONTENT_W, boxH, 3);
+        setTextColor(doc, COLOR.black);
+        doc.setFont("courier", "normal");
+        doc.setFontSize(8);
+        let py = y + 5;
+        promptLines.forEach((pl: string) => {
+          doc.text(pl, MARGIN + 4, py);
+          py += 5.5;
+        });
+        y += boxH + 5;
+      }
+
+      if (y > FOOTER_Y - 15) return;
+    });
+  }
 
   drawFooter(doc, page.pageNumber, book.title, book.totalPages);
 }
@@ -727,7 +849,7 @@ function renderBackCoverPage(doc: JsPDFInstance, book: Book) {
 
 // ── Page dispatch ─────────────────────────────────────────
 
-function renderPage(doc: JsPDFInstance, page: BookPage, book: Book) {
+function renderPage(doc: JsPDFInstance, page: BookPage, book: Book, imageMap?: ImageMap) {
   switch (page.type) {
     case "cover":
       renderCoverPage(doc, book);
@@ -744,7 +866,7 @@ function renderPage(doc: JsPDFInstance, page: BookPage, book: Book) {
     case "story-opening":
     case "story-body":
     case "story-closing":
-      renderStoryPage(doc, page, book);
+      renderStoryPage(doc, page, book, imageMap);
       break;
     case "moral":
       renderMoralPage(doc, page, book);
@@ -753,7 +875,7 @@ function renderPage(doc: JsPDFInstance, page: BookPage, book: Book) {
       renderCharactersPage(doc, page, book);
       break;
     case "image-prompts":
-      renderImagePromptsPage(doc, page, book);
+      renderImagePromptsPage(doc, page, book, imageMap);
       break;
     case "hashtags":
       renderHashtagsPage(doc, page, book);
@@ -783,10 +905,12 @@ function buildFilename(pkg: StoryPackage): string {
  *
  * @param pkg         The StoryPackage to export
  * @param onProgress  Optional progress callback (step label, 0-100)
+ * @param imageMap    Optional map of sceneIndex → base64 dataUrl for inline images
  */
 export async function exportPdf(
   pkg: StoryPackage,
-  onProgress?: PdfProgressCallback
+  onProgress?: PdfProgressCallback,
+  imageMap?: ImageMap
 ): Promise<void> {
   if (typeof window === "undefined") return;
 
@@ -806,15 +930,19 @@ export async function exportPdf(
   });
 
   const totalPages = book.pages.length;
+  const hasImages = imageMap && Object.keys(imageMap).length > 0;
 
   for (let i = 0; i < totalPages; i++) {
     const page = book.pages[i];
     if (i > 0) doc.addPage();
 
     const percent = 15 + Math.round((i / totalPages) * 75);
-    onProgress?.(`Sahifa ${i + 1} / ${totalPages} yozilmoqda…`, percent);
+    const label = hasImages
+      ? `Sahifa ${i + 1} / ${totalPages} (rasmlar bilan)…`
+      : `Sahifa ${i + 1} / ${totalPages} yozilmoqda…`;
+    onProgress?.(label, percent);
 
-    renderPage(doc, page, book);
+    renderPage(doc, page, book, imageMap);
   }
 
   onProgress?.("PDF yuklab olinmoqda…", 95);

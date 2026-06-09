@@ -8,9 +8,10 @@ import {
   FileText,
   BookOpen,
   FileJson,
+  Image as ImageIcon,
 } from "lucide-react";
 import { exportJson } from "@/lib/utils/export-json";
-import { exportPdf } from "@/lib/utils/export-pdf";
+import { exportPdf, type ImageMap } from "@/lib/utils/export-pdf";
 import { exportDocx } from "@/lib/utils/export-docx";
 import { cn } from "@/lib/utils/cn";
 import type { StoryPackage } from "@/types";
@@ -21,15 +22,24 @@ import {
   type ExportProgressState,
   type ExportFormat,
 } from "@/components/export/ExportProgressBar";
+import { useApp } from "@/app/context/AppContext";
 
 interface ExportBarProps {
   pkg: StoryPackage;
 }
 
 export function ExportBar({ pkg }: ExportBarProps) {
+  const { state } = useApp();
   const [copiedAll, setCopiedAll] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [progress, setProgress] = useState<ExportProgressState>(INITIAL_PROGRESS);
+
+  // ── Image map from image generation state ─────────────
+  const imageMap: ImageMap = Object.fromEntries(
+    Object.entries(state.imageState.images).map(([k, v]) => [Number(k), v.dataUrl])
+  );
+  const imageCount = Object.keys(imageMap).length;
+  const hasImages = imageCount > 0;
 
   // ── Build full plain-text copy ────────────────────────
   function buildFullText(): string {
@@ -81,21 +91,43 @@ export function ExportBar({ pkg }: ExportBarProps) {
     };
   }
 
-  // ── PDF export ────────────────────────────────────────
-  const handleExportPdf = useCallback(async () => {
-    setProgress({ active: true, format: "pdf", step: "Tayyorlanmoqda…", percent: 2, done: false, error: null });
-    setPreviewOpen(false);
-    try {
-      await exportPdf(pkg, makeProgressCallback("pdf"));
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "PDF yaratishda xatolik";
-      setProgress((p) => ({ ...p, active: false, done: true, error: msg }));
-    }
-  }, [pkg]);
+  // ── PDF export (with optional images) ────────────────
+  const handleExportPdf = useCallback(
+    async (withImages = false) => {
+      setProgress({
+        active: true,
+        format: "pdf",
+        step: "Tayyorlanmoqda…",
+        percent: 2,
+        done: false,
+        error: null,
+      });
+      setPreviewOpen(false);
+      try {
+        await exportPdf(
+          pkg,
+          makeProgressCallback("pdf"),
+          withImages && hasImages ? imageMap : undefined
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "PDF yaratishda xatolik";
+        setProgress((p) => ({ ...p, active: false, done: true, error: msg }));
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pkg, hasImages, imageMap]
+  );
 
   // ── DOCX export ───────────────────────────────────────
   const handleExportDocx = useCallback(async () => {
-    setProgress({ active: true, format: "docx", step: "Tayyorlanmoqda…", percent: 2, done: false, error: null });
+    setProgress({
+      active: true,
+      format: "docx",
+      step: "Tayyorlanmoqda…",
+      percent: 2,
+      done: false,
+      error: null,
+    });
     setPreviewOpen(false);
     try {
       await exportDocx(pkg, makeProgressCallback("docx"));
@@ -103,6 +135,7 @@ export function ExportBar({ pkg }: ExportBarProps) {
       const msg = err instanceof Error ? err.message : "DOCX yaratishda xatolik";
       setProgress((p) => ({ ...p, active: false, done: true, error: msg }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pkg]);
 
   const isExporting = progress.active && !progress.done;
@@ -121,9 +154,10 @@ export function ExportBar({ pkg }: ExportBarProps) {
         pkg={pkg}
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        onExportPdf={handleExportPdf}
+        onExportPdf={() => handleExportPdf(hasImages)}
         onExportDocx={handleExportDocx}
         exporting={isExporting}
+        imageMap={imageMap}
       />
 
       {/* Export bar card */}
@@ -134,10 +168,21 @@ export function ExportBar({ pkg }: ExportBarProps) {
             <p className="font-bold text-sm text-gray-700 dark:text-gray-200">
               📤 Saqlash va eksport
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-              {pkg.metadata?.wordCount} so&apos;z ·{" "}
-              {pkg.metadata?.readingTimeMinutes} daqiqa ·{" "}
-              {pkg.characters?.length ?? 0} qahramon
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-2 flex-wrap">
+              <span>{pkg.metadata?.wordCount} so&apos;z</span>
+              <span>·</span>
+              <span>{pkg.metadata?.readingTimeMinutes} daqiqa</span>
+              <span>·</span>
+              <span>{pkg.characters?.length ?? 0} qahramon</span>
+              {hasImages && (
+                <>
+                  <span>·</span>
+                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
+                    <ImageIcon size={10} />
+                    {imageCount} rasm
+                  </span>
+                </>
+              )}
             </p>
           </div>
 
@@ -167,14 +212,25 @@ export function ExportBar({ pkg }: ExportBarProps) {
             {copiedAll ? "Nusxalandi!" : "Nusxalash"}
           </button>
 
-          {/* PDF download */}
+          {/* PDF — with images if available, plain otherwise */}
           <button
-            onClick={handleExportPdf}
+            onClick={() => handleExportPdf(hasImages)}
             disabled={isExporting}
-            className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={hasImages ? `PDF (${imageCount} rasm bilan)` : "PDF (rasmsiz)"}
+            className={cn(
+              "flex flex-col items-center justify-center gap-0.5 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
+              "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40"
+            )}
           >
-            <FileDown size={15} />
-            PDF
+            <div className="flex items-center gap-1.5">
+              <FileDown size={15} />
+              PDF
+              {hasImages && (
+                <span className="text-[9px] font-bold bg-amber-400 text-white rounded-full px-1.5 py-0.5 ml-0.5">
+                  🖼️{imageCount}
+                </span>
+              )}
+            </div>
           </button>
 
           {/* DOCX download */}
@@ -200,13 +256,21 @@ export function ExportBar({ pkg }: ExportBarProps) {
         {/* Format descriptions */}
         <div className="mt-3 grid grid-cols-3 gap-2">
           {[
-            { icon: "📄", label: "PDF", desc: "Bosib chiqarish uchun" },
+            {
+              icon: "📄",
+              label: "PDF",
+              desc: hasImages
+                ? `Rasmlar bilan (${imageCount})`
+                : "Bosib chiqarish uchun",
+            },
             { icon: "📝", label: "DOCX", desc: "Word'da tahrirlash" },
             { icon: "🔧", label: "JSON", desc: "Dasturchilar uchun" },
           ].map(({ icon, label, desc }) => (
             <div key={label} className="text-center">
               <span className="text-sm">{icon}</span>
-              <p className="text-[10px] font-bold text-gray-500 dark:text-gray-500">{label}</p>
+              <p className="text-[10px] font-bold text-gray-500 dark:text-gray-500">
+                {label}
+              </p>
               <p className="text-[10px] text-gray-400 dark:text-gray-600">{desc}</p>
             </div>
           ))}
