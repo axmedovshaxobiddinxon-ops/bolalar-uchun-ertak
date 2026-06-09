@@ -40,11 +40,11 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. THE System SHALL accept a Topic as a text string of 1–200 characters in Uzbek or English.
+1. THE System SHALL accept a Topic as a text string of 1–200 characters containing at least one non-whitespace character, written in Uzbek Latin script or English.
 2. WHEN a Topic is submitted, THE System SHALL analyze its subject matter, themes, and suitability for children before generating any output.
-3. IF a Topic contains content that violates the Values_Framework prohibitions (violence, adult themes, harmful depictions), THEN THE System SHALL reject the Topic and return a descriptive error message explaining why the Topic cannot be processed.
-4. WHEN a Topic is accepted, THE System SHALL identify the primary educational value(s) from the Values_Framework that are most relevant to the Topic.
-5. THE System SHALL support Topics written in both the Uzbek Latin script and English.
+3. IF a Topic contains content that violates the Values_Framework prohibitions (violence, adult themes, harmful depictions), THEN THE System SHALL reject the Topic and return an error message that identifies the specific prohibition category violated without exposing the violating content to the User.
+4. WHEN a Topic is accepted, THE System SHALL identify between 1 and 3 values from the Values_Framework that are most directly represented by the Topic and include them in the Output_Package.
+5. IF a Topic is submitted in a script other than Uzbek Latin or English, THEN THE System SHALL reject the Topic and return an error message indicating the supported input scripts.
 
 ---
 
@@ -54,11 +54,11 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. WHEN a Topic is analyzed and accepted, THE System SHALL generate a Title that is original, engaging, and appropriate for the assigned Age_Category.
+1. WHEN a Topic is analyzed and accepted, THE System SHALL generate a Title that has not been generated in the current session and uses vocabulary appropriate for the assigned Age_Category.
 2. THE System SHALL generate the Title in the Uzbek language.
-3. WHERE the User provides their own suggested title alongside the Topic, THE System SHALL improve and optimize the User-supplied title rather than replacing it entirely.
+3. WHERE the User provides their own suggested title alongside the Topic, THE System SHALL produce a Title that retains at least one key word or the core theme from the User-supplied title while improving its engagement and age-appropriateness.
 4. THE Title SHALL NOT exceed 15 words.
-5. THE Title SHALL reflect the core theme and at least one value from the Values_Framework.
+5. THE Title SHALL contain at least one word or phrase directly related to the Topic's primary subject and reflect at least one value from the Values_Framework.
 
 ---
 
@@ -69,11 +69,13 @@ The system is intended to assist parents, teachers, content creators, and educat
 #### Acceptance Criteria
 
 1. WHEN a Story is generated, THE System SHALL assign exactly one Age_Category label from the set {3–5, 6–8, 9–12}.
-2. THE System SHALL determine the Age_Category based on vocabulary complexity, sentence length, theme abstraction, and narrative structure complexity.
-3. WHILE the Age_Category is 3–5, THE System SHALL use simple sentences of no more than 10 words on average and concrete, familiar concepts only.
-4. WHILE the Age_Category is 6–8, THE System SHALL use moderately complex sentences and may introduce light moral dilemmas with clear resolutions.
-5. WHILE the Age_Category is 9–12, THE System SHALL use richer vocabulary, multi-step plots, and deeper ethical reasoning, while remaining fully child-safe.
+2. WHEN a Story is generated, THE System SHALL determine the Age_Category by evaluating vocabulary complexity, average sentence length, theme abstraction level, and narrative structure complexity of the generated content.
+3. WHILE the Age_Category is 3–5, THE System SHALL use simple sentences with an average length of no more than 10 words and restrict content to concrete, real-world concepts recognisable to children aged 3–5 (e.g. animals, family, everyday objects).
+4. WHILE the Age_Category is 6–8, THE System SHALL use sentences with an average length of 11–18 words and may introduce moral dilemmas that are resolved unambiguously within the same story.
+5. WHILE the Age_Category is 9–12, THE System SHALL use sentences with an average length of 15–25 words, a narrative containing at least 3 distinct plot stages, and ethical reasoning that avoids violence, adult romantic content, and graphic imagery.
 6. THE System SHALL include the Age_Category label in the Output_Package.
+7. IF the User specifies an Age_Category before story generation, THEN THE System SHALL use that Age_Category without overriding it through automatic determination.
+8. IF the System cannot determine an Age_Category from the provided topic, THEN THE System SHALL assign the Age_Category 6–8 as the default and indicate in the Output_Package that the Age_Category was set by default.
 
 ---
 
@@ -84,11 +86,12 @@ The system is intended to assist parents, teachers, content creators, and educat
 #### Acceptance Criteria
 
 1. THE System SHALL support exactly three Length_Mode options: Short, Medium, and Long.
-2. WHEN the User selects Short, THE System SHALL generate a Story of 300–500 words.
-3. WHEN the User selects Medium, THE System SHALL generate a Story of 600–900 words.
-4. WHEN the User selects Long, THE System SHALL generate a Story of 1000–1500 words.
-5. IF the User does not specify a Length_Mode, THEN THE System SHALL default to Medium.
-6. THE System SHALL include the word count of the generated Story in the Output_Package.
+2. WHEN the User selects Short, THE System SHALL generate a Story with a word count between 300 and 500 words (inclusive).
+3. WHEN the User selects Medium, THE System SHALL generate a Story with a word count between 600 and 900 words (inclusive).
+4. WHEN the User selects Long, THE System SHALL generate a Story with a word count between 1000 and 1500 words (inclusive).
+5. IF the User does not specify a Length_Mode before submitting a generation request, THEN THE System SHALL default to Medium.
+6. WHEN Story generation completes, THE System SHALL include the exact word count of the generated Story in the Output_Package.
+7. IF the word count of the generated Story falls outside the word range defined for the selected Length_Mode, THEN THE System SHALL attempt generation once more to produce a Story within the target range before returning the Output_Package.
 
 ---
 
@@ -98,16 +101,16 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. WHEN a Topic is accepted and preferences are set, THE System SHALL generate a complete Story in the Uzbek language following the Story_Structure.
-2. THE System SHALL ensure the Story is original and does not reproduce previously generated Stories verbatim.
-3. THE Story SHALL promote at least one value from the Values_Framework.
-4. THE Story SHALL ensure that goodness triumphs over any negative situation by the conclusion.
-5. THE Story SHALL feature at least one protagonist who models positive behavior for children.
-6. THE Story SHALL use simple, fluent, and understandable language appropriate for the assigned Age_Category.
-7. THE Story_Structure SHALL be followed in this exact order: (1) Interesting Introduction → (2) Main Event → (3) Problem or Challenge → (4) Hero's Correct Decision → (5) Resolution → (6) Educational Conclusion.
-8. THE Story SHALL conclude with a clear, positive Educational Conclusion that explicitly states the lesson learned.
-9. THE System SHALL promote learning, reading, and respect for teachers within the Story narrative where thematically appropriate.
-10. THE System SHALL reflect respect for parents and elders within the Story narrative where thematically appropriate.
+1. WHEN a Topic is accepted and preferences are set, THE System SHALL generate a complete Story in the Uzbek language following the Story_Structure in exact sequential order: (1) Interesting Introduction → (2) Main Event → (3) Problem or Challenge → (4) Hero's Correct Decision → (5) Resolution → (6) Educational Conclusion.
+2. THE System SHALL ensure the Story does not reproduce the plot, protagonist name, and central conflict of any previously generated Story within the same session simultaneously.
+3. THE Story SHALL explicitly demonstrate at least one value from the Values_Framework through at least one observable character action or narrative event.
+4. THE Story SHALL ensure that by the end of Story_Structure step (5) Resolution, goodness, correct behavior, or a Values_Framework value produces a positive outcome for the protagonist.
+5. THE Story SHALL feature at least one protagonist whose actions in response to the Problem or Challenge model a positive behavior from the Values_Framework.
+6. THE System SHALL generate all Story text at the vocabulary complexity and sentence length defined for the assigned Age_Category in Requirement 3.
+7. THE Story SHALL include all six Story_Structure sections, each marked with a section heading or clearly distinguished as a narrative transition.
+8. THE Story SHALL conclude with a sixth section (Educational Conclusion) that explicitly states, in one or two sentences, the lesson the protagonist learned during the story.
+9. WHERE the Topic relates to education, learning, or knowledge, THE System SHALL include at least one scene in which a character demonstrates respect for a teacher or the act of learning.
+10. WHERE the Topic relates to family, home, or growing up, THE System SHALL include at least one scene in which a character demonstrates respect for a parent or elder.
 
 ---
 
@@ -117,13 +120,14 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. THE Content_Filter SHALL prevent the System from generating any Story, Title, Summary, Lesson, Image_Prompt, or Video_Scene containing violence or depictions that glorify harm.
-2. THE Content_Filter SHALL prevent generation of content containing psychologically frightening or traumatic scenes.
-3. THE Content_Filter SHALL prevent generation of content containing rude language, insults, or profanity.
-4. THE Content_Filter SHALL prevent generation of content containing age-inappropriate topics including but not limited to romantic relationships, substance use, and political propaganda.
-5. THE Content_Filter SHALL prevent generation of content that ends with hopelessness, despair, or depression.
-6. THE Content_Filter SHALL prevent generation of content that portrays deception, fraud, or bad behavior as heroic or admirable.
-7. IF the Content_Filter detects a policy violation during generation, THEN THE System SHALL discard the partial output and return an error message without exposing the violating content to the User.
+1. THE Content_Filter SHALL prevent the System from generating any Story, Title, Summary, Lesson, Image_Prompt, or Video_Scene containing physical violence, graphic injury, or depictions where harm is presented as admirable, rewarded, or occurring without negative consequence.
+2. THE Content_Filter SHALL prevent generation of content containing any of the following: death of a named character, severe injury, direct threats to a child character, unresolved abandonment of a child character, or depictions of monsters or antagonists without a scene of safety or comfort following the encounter.
+3. THE Content_Filter SHALL prevent generation of content containing dignity-degrading language, slurs, or profanity in the Uzbek or English output language.
+4. THE Content_Filter SHALL prevent generation of content containing any of the following age-inappropriate topics: romantic or sexual relationships, substance use (alcohol, drugs, tobacco), partisan political propaganda, gambling, or criminal activity presented neutrally or positively.
+5. THE Content_Filter SHALL prevent generation of any Story, Summary, or Lesson in which the protagonist ends the narrative without a positive outcome, restored hope, or explicitly stated lesson.
+6. THE Content_Filter SHALL prevent generation of content in which deception or fraud by a character is rewarded without that character experiencing negative consequences or showing remorse before the story ends.
+7. IF the Content_Filter detects a policy violation during generation, THEN THE System SHALL discard the partial output and retry generation up to 3 times before returning an error message, without exposing any violating content to the User at any point.
+8. IF all 3 retry attempts produce content that violates Content_Filter rules, THEN THE System SHALL return an error message to the User indicating that a safe story could not be generated for the given Topic, without returning any partial output.
 
 ---
 
@@ -133,10 +137,10 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. WHEN a Story is generated, THE System SHALL generate a Summary of 2–4 sentences.
-2. THE Summary SHALL be written in the Uzbek language.
-3. THE Summary SHALL convey the main theme, the central character, and the core value promoted by the Story without revealing the full Resolution.
-4. THE Summary SHALL be suitable for use as a standalone description on social media or educational platforms.
+1. WHEN a Story is generated, THE System SHALL generate a Summary of 2–4 sentences and no more than 80 words total.
+2. THE Summary SHALL be written in the Uzbek language using the Uzbek Latin script.
+3. THE Summary SHALL name or describe the central character, name or reference the core value from the Values_Framework that the Story promotes, and state the main theme of the Story, without disclosing the outcome of Story_Structure step (5) Resolution.
+4. THE Summary SHALL be a self-contained description that does not require the reader to have read the Story in order to understand the context, and SHALL contain no content that would be rejected by the Content_Filter.
 
 ---
 
@@ -147,10 +151,10 @@ The system is intended to assist parents, teachers, content creators, and educat
 #### Acceptance Criteria
 
 1. WHEN a Story is generated, THE System SHALL extract and state the Lesson in 1–3 sentences.
-2. THE Lesson SHALL be written in the Uzbek language.
-3. THE Lesson SHALL reference at least one named value from the Values_Framework.
-4. THE Lesson SHALL be written in clear, positive, child-appropriate language.
-5. THE Lesson SHALL NOT repeat sentences verbatim from the Story text.
+2. THE Lesson SHALL be written in the Uzbek language using the Latin script.
+3. THE Lesson SHALL explicitly name at least one value from the Values_Framework by its Uzbek label (e.g., "halollik", "do'stlik", "mehnatsevarlik").
+4. THE Lesson SHALL be written using vocabulary and sentence structures appropriate for the assigned Age_Category as defined in Requirement 3 criteria 3–5, and SHALL NOT use shame-based, guilt-inducing, or threatening language toward the reader.
+5. THE Lesson SHALL NOT reproduce any sentence verbatim from the Story text, nor paraphrase the Educational Conclusion section of the Story (Story_Structure step 6) so closely that it contains the same subject, verb, and outcome in the same sequence.
 
 ---
 
@@ -161,13 +165,14 @@ The system is intended to assist parents, teachers, content creators, and educat
 #### Acceptance Criteria
 
 1. WHEN a Story is generated, THE System SHALL generate between 3 and 10 Image_Prompts, with the count proportional to the Length_Mode (Short: 3–4, Medium: 5–7, Long: 8–10).
-2. EACH Image_Prompt SHALL describe a single key scene from the Story corresponding to a distinct section of the Story_Structure.
-3. EACH Image_Prompt SHALL specify the Disney Pixar animation style, children's book illustration quality, and bright, vivid colors.
-4. EACH Image_Prompt SHALL include a description of the Character_Profile of all characters appearing in that scene, ensuring visual consistency across all Image_Prompts for the same Story.
-5. THE System SHALL generate a Character_Profile for each named character before generating Image_Prompts, defining appearance, clothing colors, and distinctive features.
-6. EACH Image_Prompt SHALL be written in English to maximize compatibility with image generation tools.
-7. EACH Image_Prompt SHALL be free of any violent, frightening, or age-inappropriate visual descriptions.
+2. EACH Image_Prompt SHALL describe a single key scene corresponding to a distinct Story_Structure section, and no two Image_Prompts within the same Output_Package SHALL reference the same Story_Structure section.
+3. EACH Image_Prompt SHALL specify: Disney Pixar 3D animation style, bright and vivid colors, soft directional lighting, and a child-friendly composition suitable for ages 3–12.
+4. EACH Image_Prompt SHALL embed the Character_Profile attributes (as defined in Requirement 10) of every character appearing in that scene using verbatim-identical attribute values across all prompts in the same Output_Package.
+5. WHEN generating Image_Prompts, THE System SHALL first generate a Character_Profile for each named character or recurring role title in the Story, defining at minimum: skin tone, hair color and style, eye color, clothing color and style, and one distinguishing physical feature.
+6. EACH Image_Prompt SHALL be written in English.
+7. EACH Image_Prompt SHALL contain no depictions of violence, physical harm, blood, frightening creatures, or any content that would be age-inappropriate for children aged 3–12.
 8. THE System SHALL number Image_Prompts sequentially in the Output_Package (Image Prompt 1, Image Prompt 2, etc.).
+9. EACH Image_Prompt SHALL include all of the following structural components: (a) the primary action occurring in the scene, (b) the setting and background environment, (c) all characters present with their Character_Profile attributes, and (d) the style descriptors defined in criterion 3.
 
 ---
 
@@ -177,10 +182,10 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. THE System SHALL generate a Character_Profile for every named character in the Story before producing any Image_Prompt.
-2. EACH Character_Profile SHALL include: character name, approximate age appearance, physical description (hair color, eye color, skin tone), clothing (colors, style), and one or two distinctive visual traits.
-3. WHEN an Image_Prompt references a character, THE System SHALL include that character's full Character_Profile description within the prompt text.
-4. THE System SHALL NOT alter any Character_Profile attribute between Image_Prompts within the same Output_Package.
+1. THE System SHALL generate a Character_Profile for every character who is referred to by a personal name or by a recurring role title (e.g., "the old fisherman", "ota") in the Story, and SHALL complete all Character_Profiles before producing any Image_Prompt.
+2. THE Character_Profile SHALL include all of the following fields: (a) character identifier (personal name or role title used in the Story), (b) age-bracket drawn from the set {toddler (2–4), child (5–10), teen (11–16), adult (17+), elder (65+)}, (c) physical description comprising hair color, eye color, and skin tone, (d) clothing described by color and style, and (e) exactly one or two distinctive visual traits, each being a single observable physical attribute (e.g., "a red birthmark on the left cheek", "always carries a wooden walking stick").
+3. WHEN an Image_Prompt references a character, THE System SHALL embed that character's Character_Profile fields—identifier, age-bracket, physical description, clothing, and distinctive visual traits—as a verbatim descriptive phrase within the Image_Prompt text.
+4. THE System SHALL NOT alter any Character_Profile field between Image_Prompts within the same Output_Package, except where the Story explicitly narrates a deliberate change in a character's clothing or physical state, in which case THE System SHALL note that change as a declared variant within the Character_Profile before generating the affected Image_Prompt.
 
 ---
 
@@ -190,11 +195,13 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. WHEN a Story is generated, THE System SHALL generate one Video_Scene description per Image_Prompt.
-2. EACH Video_Scene SHALL describe the setting, characters present, actions occurring, and the emotional tone of the scene in 2–4 sentences.
-3. EACH Video_Scene SHALL be written in the Uzbek language.
-4. EACH Video_Scene SHALL be sequentially numbered to correspond with its paired Image_Prompt.
-5. EACH Video_Scene description SHALL be suitable for use as a storyboard script for a children's animation.
+1. WHEN a Story is generated, THE System SHALL generate exactly one Video_Scene description for each Image_Prompt, resulting in a total Video_Scene count equal to the Image_Prompt count.
+2. WHEN generating each Video_Scene, THE System SHALL describe: (a) the physical setting (location and time of day), (b) the names and observable positions of all characters present, (c) the specific physical actions each character performs, and (d) the emotional tone of the scene expressed as a named mood adjective (e.g., joyful, tense, hopeful, curious, triumphant).
+3. THE System SHALL ensure each Video_Scene is 2–4 sentences in length.
+4. THE System SHALL generate all Video_Scene descriptions in grammatically correct Uzbek using the Latin script.
+5. THE System SHALL number each Video_Scene sequentially to match its paired Image_Prompt number (e.g., Video Scene 1 pairs with Image Prompt 1).
+6. THE System SHALL ensure each Video_Scene contains only child-safe content free of violence, frightening imagery, and age-inappropriate themes, consistent with the Content_Filter rules in Requirement 6.
+7. IF the Image_Prompts for a Story fail to generate, THEN THE System SHALL include a clearly labeled error placeholder for all Video_Scenes in the Output_Package and continue returning all other successfully generated components.
 
 ---
 
@@ -205,10 +212,10 @@ The system is intended to assist parents, teachers, content creators, and educat
 #### Acceptance Criteria
 
 1. WHEN a Story is generated, THE System SHALL generate a Hashtag_Set of 8–15 hashtags.
-2. THE Hashtag_Set SHALL include hashtags in both Uzbek and English.
-3. EACH hashtag SHALL be relevant to the Story's topic, values, Age_Category, or language.
+2. THE Hashtag_Set SHALL include at least 3 hashtags in the Uzbek language and at least 2 hashtags in the English language.
+3. EACH hashtag SHALL directly reference a term, concept, named value from the Values_Framework, Age_Category label, or theme explicitly present in the Story.
 4. THE Hashtag_Set SHALL include at least two hashtags referencing Uzbek children's content (e.g., #BolalarUchun, #UzbekErtak).
-5. EACH hashtag SHALL be formatted with a leading `#` symbol and no spaces within the tag.
+5. EACH hashtag SHALL be formatted with a leading `#` symbol, contain only letters and digits with no spaces or special characters, not exceed 30 characters in total length (including the `#`), and be unique within the Hashtag_Set.
 
 ---
 
@@ -218,11 +225,11 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. WHEN all generation steps are complete, THE System SHALL return a single Output_Package containing all of the following components in order: (1) Title, (2) Age_Category, (3) Length_Mode and word count, (4) Summary, (5) Full Story, (6) Lesson, (7) Character_Profiles, (8) Image_Prompts (numbered), (9) Video_Scenes (numbered), (10) Hashtag_Set.
-2. THE System SHALL clearly label each component with a heading in the Output_Package.
-3. THE System SHALL ensure all Uzbek-language components use the Uzbek Latin script.
+1. WHEN all generation steps are complete, THE System SHALL return a single Output_Package containing all of the following components in order: (1) Title, (2) Age_Category, (3) Length_Mode and word count, (4) Summary, (5) Full Story, (6) Lesson, (7) Character_Profiles, (8) Image_Prompts (numbered), (9) Video_Scenes (numbered), (10) Hashtag_Set, (11) Parent/Educator Note.
+2. THE System SHALL label each component with a bold section heading whose text exactly matches the component name as listed in criterion 1.
+3. THE System SHALL generate the following components in the Uzbek Latin script: Title, Age_Category, Summary, Full Story, Lesson, Character_Profiles, Video_Scenes, Hashtag_Set (Uzbek hashtags), and Parent/Educator Note.
 4. THE System SHALL ensure all Image_Prompts are in English.
-5. IF any component fails to generate, THEN THE System SHALL include a clearly labeled error placeholder for that component and continue returning all successfully generated components.
+5. IF any component fails to generate, THEN THE System SHALL include a section with the component's standard heading followed by the text "[Generation failed for this component]", and SHALL continue returning all successfully generated components without omitting the failed component's slot.
 
 ---
 
@@ -232,11 +239,11 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. THE System SHALL incorporate at least one value from the Values_Framework into every Story, Title, Summary, and Lesson.
-2. WHEN the Topic directly aligns with a specific value from the Values_Framework (e.g., a topic about friendship), THE System SHALL make that value the central theme of the Story.
-3. THE System SHALL NOT portray any value from the Values_Framework in a negative or ironic manner.
-4. THE Story SHALL demonstrate values through character actions and narrative events, not solely through direct statements.
-5. THE Story SHALL demonstrate that hard work, patience, honesty, or kindness leads to a positive outcome in the Resolution.
+1. THE System SHALL ensure that every Story thematically demonstrates at least one value from the Values_Framework through plot events or character behavior, that every Title reflects the theme of at least one Values_Framework value in its wording, that every Summary mentions the value-bearing character action or names the promoted value, and that every Lesson explicitly names at least one value from the Values_Framework.
+2. WHEN the primary subject of the Topic matches the name or a recognized synonym of a value in the Values_Framework (e.g., a topic whose primary subject is friendship, honesty, or hard work), THE System SHALL make that matched value the protagonist's primary goal and the central driver of the Story's Resolution.
+3. THE System SHALL NOT generate any Story, Title, Summary, or Lesson in which a character who demonstrates a Values_Framework value receives a negative final outcome as a direct and unreversed consequence of that demonstration.
+4. THE System SHALL ensure the Story demonstrates each promoted value through at least one observable character action or narrative event, in addition to any direct statements, per value incorporated into the Story.
+5. THE System SHALL ensure the Story's Resolution demonstrates that at least one value from the Values_Framework directly leads to the protagonist achieving their goal or receiving positive recognition, for whichever value is the primary theme of that Story.
 
 ---
 
@@ -246,11 +253,11 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. THE System SHALL generate all Uzbek-language content (Story, Title, Summary, Lesson, Video_Scenes, Hashtags) in grammatically correct Uzbek using the Latin script.
-2. THE System SHALL use age-appropriate vocabulary consistent with the assigned Age_Category.
-3. THE System SHALL avoid foreign loan words when a native Uzbek equivalent exists, except where the loan word is in common everyday use by Uzbek children.
-4. THE System SHALL use active voice in the Story narrative to maintain clarity and engagement.
-5. THE System SHALL ensure sentence lengths and structures are appropriate for the assigned Age_Category as defined in Requirement 3.
+1. THE System SHALL generate all Uzbek-language content (Story, Title, Summary, Lesson, Video_Scenes, Hashtags) exclusively in the Uzbek Latin script, free of Cyrillic characters, and free of morphological and syntactic errors as defined by standard Uzbek Latin-script grammar rules.
+2. THE System SHALL use vocabulary in all Uzbek-language content that matches the complexity level defined for the assigned Age_Category in Requirement 3: single-syllable or commonly known words for Age_Category 3–5, everyday conversational words for Age_Category 6–8, and broader educational vocabulary for Age_Category 9–12.
+3. IF a native Uzbek equivalent of a foreign loan word exists AND the loan word is not a word that Uzbek-speaking children aged 3–12 would encounter in everyday school, home, or media contexts, THEN THE System SHALL use the native Uzbek equivalent in place of the loan word.
+4. WHILE generating the Story narrative, THE System SHALL use active-voice sentence constructions as the default, limiting passive-voice constructions to cases where active voice would make the sentence grammatically unnatural in Uzbek.
+5. THE System SHALL ensure that average sentence length and grammatical structure complexity in all Uzbek-language content conform to the per-Age_Category sentence rules defined in Requirement 3 criteria 3, 4, and 5.
 
 ---
 
@@ -260,9 +267,10 @@ The system is intended to assist parents, teachers, content creators, and educat
 
 #### Acceptance Criteria
 
-1. THE System SHALL generate Stories that are original and do not reproduce plots, character names, or key scenes from previously generated Stories within the same session.
-2. THE System SHALL vary the narrative setting, protagonist name, and central conflict for each new Story request even when Topics are similar.
-3. WHERE the User submits the same Topic more than once in a session, THE System SHALL generate a distinctly different Story each time.
+1. THE System SHALL generate Stories such that no two Stories within the same session share the same protagonist name, narrative setting, and central conflict simultaneously, where a session is defined as the continuous sequence of Story requests from the User's first request until they explicitly end the session or the session times out after 60 minutes of inactivity.
+2. THE System SHALL ensure that for each new Story request, the narrative setting, protagonist name, and central conflict each differ from those used in all previously generated Stories in the same session, regardless of whether the Topic is the same or similar to a prior Topic.
+3. WHERE the User submits an identical Topic string as a previous request within the same session, THE System SHALL generate a Story in which the narrative setting, protagonist name, and central conflict all differ from those of the Story previously generated for that Topic.
+4. IF the System is unable to generate a Story that satisfies the originality constraints of criteria 1–3, THEN THE System SHALL return an error message indicating that a unique Story could not be generated for the given Topic in this session, and SHALL NOT return a partial or repeated Story.
 
 ---
 
@@ -273,7 +281,7 @@ The system is intended to assist parents, teachers, content creators, and educat
 #### Acceptance Criteria
 
 1. WHEN a Story is generated, THE System SHALL produce a Parent/Educator Note of 2–5 sentences.
-2. THE Parent/Educator Note SHALL be written in Uzbek.
-3. THE Parent/Educator Note SHALL identify the primary value(s) from the Values_Framework that the Story promotes.
-4. THE Parent/Educator Note SHALL suggest one or two questions a parent or teacher can ask the child to stimulate reflection on the Story's lesson.
-5. THE Parent/Educator Note SHALL be included as a labeled component within the Output_Package.
+2. THE Parent/Educator Note SHALL be written in Uzbek using the Latin script.
+3. THE Parent/Educator Note SHALL explicitly name the primary value(s) from the Values_Framework (using their Uzbek labels) that the Story promotes.
+4. THE Parent/Educator Note SHALL include 1–2 open-ended questions that a parent or teacher can ask the child after reading, where each question must be directly answerable from events or characters in the Story.
+5. THE Parent/Educator Note SHALL be included as a labeled component within the Output_Package using the heading "Ota-ona va o'qituvchilar uchun izoh".
