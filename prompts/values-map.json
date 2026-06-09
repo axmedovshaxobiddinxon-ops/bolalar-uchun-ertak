@@ -1,0 +1,134 @@
+{
+  "values": {
+    "ezgulik": {
+      "uzbekLabel": "Ezgulik",
+      "englishLabel": "Kindness",
+      "promptDescription": "The story should prominently feature acts of kindness, generosity, and compassion. The hero should help others without expecting reward. Kindness shown to strangers, animals, or those in need must be featured.",
+      "storyElements": [
+        "hero helps a stranger in need without being asked",
+        "acts of generosity rewarded by the universe",
+        "compassion shown to animals or elderly people",
+        "sharing food or resources with others"
+      ],
+      "uzbekKeywords": ["yaxshilik", "mehribon", "saxiy", "yordam", "mehr"],
+      "moralTemplate": "Yaxshilik qilgan kishiga yaxshilik qaytadi. Mehribon qalb doim baxtli bo'ladi."
+    },
+    "halollik": {
+      "uzbekLabel": "Halollik",
+      "englishLabel": "Honesty",
+      "promptDescription": "The story should show that honesty and truthfulness are always the right path, even when it is difficult. The hero chooses truth over personal gain.",
+      "storyElements": [
+        "hero tells the truth even when it is scary or costly",
+        "dishonesty causes problems and unhappiness",
+        "honesty brings trust, friendship, and reward",
+        "hero admits a mistake and is respected for it"
+      ],
+      "uzbekKeywords": ["rostgo'y", "halol", "to'g'ri", "ishonch", "haqiqat"],
+      "moralTemplate": "Halollik — eng yaxshi siyosat. Rostgo'y odam har doim hurmat topadi."
+    },
+    "odob-axloq": {
+      "uzbekLabel": "Odob-axloq",
+      "englishLabel": "Good Manners",
+      "promptDescription": "The story should demonstrate the importance of polite behaviour, respectful speech, and good social etiquette in Uzbek culture.",
+      "storyElements": [
+        "polite greetings and farewells shown naturally",
+        "respectful speech to elders and teachers",
+        "table manners and hospitality in Uzbek tradition",
+        "character who is rude learns to be polite"
+      ],
+      "uzbekKeywords": ["odob", "hurmat", "salom", "rahmat", "iltimos", "muomala"],
+      "moralTemplate": "Odobli bola hamma joyda hurmatga sazovor bo'ladi. Yaxshi so'z — yurak kaliti."
+    },
+    "ilm-marifat": {
+      "uzbekLabel": "Ilm-ma'rifat",
+      "englishLabel": "Education & Knowledge",
+      "promptDescription": "The story should celebrate the power of education, learning, and intellectual curiosity. Knowledge should be shown as a superpower.",
+      "storyElements": [
+        "hero's knowledge or education solves the central problem",
+        "studying and hard work at school lead to success",
+        "curiosity and asking questions rewarded",
+        "wise elder shares knowledge that changes everything"
+      ],
+      "uzbekKeywords": ["bilim", "ilm", "o'qish", "maktab", "aqlli", "ziyrak"],
+      "moralTemplate": "Ilm — eng katta boylik. Bilimli odam har qanday qiyinchilikni yengadi."
+    },
+    "kitobxonlik": {
+      "uzbekLabel": "Kitobxonlik",
+      "englishLabel": "Love of Reading",
+      "promptDescription": "The story should inspire a love of reading. A book, library, or reading should play a central role in solving the story's problem.",
+      "storyElements": [
+        "hero reads a book that gives them the key to solving the problem",
+        "library or bookshop features prominently",
+        "reading for pleasure shown as joyful and exciting",
+        "hero quotes or applies something they read"
+      ],
+      "uzbekKeywords": ["kitob", "o'qish", "kutubxona", "sahifa", "she'r", "adabiyot"],
+      "moralTemplate": "Kitob o'qigan odam dunyo ko'radi. Har bir kitob — yangi do'st."
+    },
+    "vatanparvarlik": {
+      "uzbekLabel": "Vatanparvarlik",
+      "englishLabel": "Patriotism",
+      "promptDescription": "The story should celebrate Uzbek culture, traditions, nature, and heritage. Hero is proud of their homeland and protects or celebrates it.",
+      "storyElements": [
+        "Uzbek national traditions and clothing featured beautifully",
+        "hero protects nature, a mountain, river, or garden",
+        "national celebration or festival central to the story",
+        "pride in Uzbek craftsmanship, food, or history"
+      ],
+      "uzbekKeywords": ["vatan", "o'zbek", "milliy", "an'ana", "tarix", "bayram"],
+      "moralTemplate": "Vatanini sevgan odam hamma narsani qo'riqlaydi. Bizning yurtimiz — eng go'zal yurt."
+    },
+    "ota-ona-hurmat": {
+      "uzbekLabel": "Ota-onaga hurmat",
+      "englishLabel": "Respect for Parents",
+      "promptDescription": "The story should show the importance of listening to parents, helping at home, and showing gratitude and respect to family.",
+      "storyElements": [
+        "hero follows parents' advice which turns out to be wise",
+        "hero helps parents with household tasks joyfully",
+        "hero surprises parents with a kind gesture",
+        "character who ignores parents faces difficulty and learns"
+      ],
+      "uzbekKeywords": ["ota", "ona", "oila", "hurmat", "nasihat", "mehr"],
+      "moralTemplate": "Ota-onaning ko'nglini xush qilgan bola baxtli bo'ladi. Ularning nasihatida hikmat bor."
+    },
+    "ustoz-ehtirom": {
+      "uzbekLabel": "Ustozga ehtirom",
+      "englishLabel": "Respect for Teachers",
+      "promptDescription": "The story should honour teachers and the education they provide. A teacher's guidance should be central to the story's resolution.",
+      "storyElements": [
+        "teacher's lesson or advice proves crucial to solving the problem",
+        "hero expresses gratitude to their teacher",
+        "young character helps or defends their teacher",
+        "knowledge gained in school used in real life"
+      ],
+      "uzbekKeywords": ["ustoz", "o'qituvchi", "maktab", "saboq", "dars", "o'rganmoq"],
+      "moralTemplate": "Ustoz — dunyodagi eng sharafli inson. Ustozni hurmat qilgan o'zi ham hurmatga sazovor bo'ladi."
+    },
+    "dostlik": {
+      "uzbekLabel": "Do'stlik",
+      "englishLabel": "Friendship",
+      "promptDescription": "The story should show the power of true friendship — helping each other, standing together through difficulty, and celebrating each other's success.",
+      "storyElements": [
+        "friends help each other through the central challenge",
+        "friendship formed between unlikely characters",
+        "lonely character's life changed by a new friendship",
+        "friends work as a team to solve the problem"
+      ],
+      "uzbekKeywords": ["do'st", "birlik", "hamkor", "yordam", "birgalik", "sadoqat"],
+      "moralTemplate": "Chin do'st — qora kunda bilinadi. Do'stlik — eng katta boylik."
+    },
+    "mehnatsevarlik": {
+      "uzbekLabel": "Mehnatsevarlik",
+      "englishLabel": "Hard Work & Perseverance",
+      "promptDescription": "The story should demonstrate that hard work, persistence, and never giving up always lead to success. Laziness and shortcuts lead to problems.",
+      "storyElements": [
+        "hero persists through multiple failures before succeeding",
+        "hard work rewarded at the end of the story",
+        "lazy character regrets shortcuts and learns to work hard",
+        "small persistent effort builds up to a big result"
+      ],
+      "uzbekKeywords": ["mehnat", "tirishqoq", "sabr", "g'ayrat", "harakat", "maqsad"],
+      "moralTemplate": "Mehnat — muvaffaqiyatning kaliti. Tirishqoq odam har qanday tog'ni ham hatlab o'tadi."
+    }
+  }
+}

@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Baloo+2:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    --font-nunito: 'Nunito', sans-serif;
+    --font-baloo: 'Baloo 2', sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-amber-50 text-gray-800 font-sans antialiased;
+    font-family: 'Nunito', system-ui, sans-serif;
+  }
+
+  .dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white dark:bg-gray-900 rounded-2xl shadow-card border border-amber-100 dark:border-gray-800;
+  }
+
+  .btn-primary {
+    @apply bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-white font-bold
+           rounded-2xl px-6 py-3 transition-all duration-200 shadow-warm
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none
+           focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply bg-white dark:bg-gray-800 hover:bg-amber-50 dark:hover:bg-gray-700
+           border border-amber-200 dark:border-gray-700 text-gray-700 dark:text-gray-200
+           font-semibold rounded-xl px-4 py-2 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-1;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold
+           border transition-all duration-200 cursor-pointer select-none;
+  }
+
+  .chip-default {
+    @apply chip bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700
+           text-gray-600 dark:text-gray-400 hover:border-amber-300 hover:text-amber-600;
+  }
+
+  .chip-active {
+    @apply chip bg-amber-400 border-amber-400 text-white shadow-warm;
+  }
+
+  .section-header {
+    @apply flex items-center justify-between w-full;
+  }
+
+  .prose-story {
+    @apply text-gray-800 dark:text-gray-200 leading-relaxed text-base md:text-lg;
+    font-family: 'Nunito', sans-serif;
+    line-height: 1.9;
+  }
+
+  .prose-story p {
+    @apply mb-4;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-amber-50 dark:bg-gray-900;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-amber-200 dark:bg-gray-700 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-amber-300 dark:bg-gray-600;
+}
+
+/* Loading shimmer */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.4) 50%,
+    rgba(255,255,255,0) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
