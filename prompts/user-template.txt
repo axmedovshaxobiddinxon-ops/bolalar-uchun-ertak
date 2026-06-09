@@ -1,0 +1,65 @@
+Create a complete educational fairy tale in Uzbek based on the following request:
+
+TOPIC: {{TOPIC}}
+
+AGE CATEGORY: {{AGE_CATEGORY}}
+{{AGE_GUIDANCE}}
+
+STORY LENGTH: {{STORY_LENGTH}}
+{{LENGTH_GUIDANCE}}
+
+EDUCATIONAL VALUES TO EMPHASISE: {{EMPHASIZED_VALUES}}
+
+{{VALUES_DESCRIPTIONS}}
+
+SAFETY RULES:
+{{SAFETY_RULES}}
+
+OUTPUT SCHEMA:
+Return ONLY a JSON object matching this exact schema (no markdown, no extra text):
+
+{
+  "title": "string — engaging Uzbek story title",
+  "ageCategory": "4-6" | "7-9" | "10-12",
+  "summary": "string — 3 to 5 sentences summarising the story in Uzbek",
+  "story": "string — complete story text in Uzbek following the 6-part structure",
+  "moralLesson": "string — clear moral lesson in Uzbek (1-3 sentences)",
+  "educationalValues": ["array of value IDs from: ezgulik, halollik, odob-axloq, ilm-marifat, kitobxonlik, vatanparvarlik, ota-ona-hurmat, ustoz-ehtirom, dostlik, mehnatsevarlik"],
+  "characters": [
+    {
+      "name": "string — character name in Uzbek",
+      "role": "protagonist" | "mentor" | "antagonist" | "supporting",
+      "visualSeed": "string — stable English visual description for image generation, e.g. 'a 7-year-old Uzbek boy with dark hair and warm brown eyes, wearing a traditional blue doppi hat and green chapan coat, friendly smile, storybook illustration style'"
+    }
+  ],
+  "imagePrompts": [
+    {
+      "scene": 1,
+      "storyReference": "string — which part of story in Uzbek",
+      "prompt": "string — full English prompt for image AI including character visual seeds and style suffix",
+      "style": "warm watercolor illustration, child-friendly, Uzbek cultural setting",
+      "characters": ["array of character names appearing in this scene"]
+    }
+  ],
+  "videoScenes": [
+    {
+      "scene": 1,
+      "duration": "string — e.g. '5-8 seconds'",
+      "description": "string — English description for video AI",
+      "narration": "string — Uzbek narration text for this scene",
+      "cameraMovement": "string — e.g. 'slow pan left to right'",
+      "mood": "string — e.g. 'warm, hopeful, gentle'"
+    }
+  ],
+  "hashtags": {
+    "uzbek": ["#bolalaruchun", "5 to 8 Uzbek hashtags"],
+    "english": ["#uzbekfairytale", "5 to 8 English hashtags"]
+  },
+  "parentNote": "string — 2-3 sentence note for parents in Uzbek explaining the educational value and how to discuss it with the child"
+}
+
+IMPORTANT REMINDERS:
+- Minimum {{MIN_WORDS}} words for the story text
+- All story/summary/moral/parentNote content MUST be in Uzbek Latin script
+- All image prompts MUST be in English
+- Return ONLY the JSON object, nothing else

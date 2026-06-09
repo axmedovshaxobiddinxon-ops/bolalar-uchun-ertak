@@ -1,0 +1,63 @@
+{
+  "profiles": {
+    "4-6": {
+      "label": "4–6 yosh (Kichik bolalar)",
+      "vocabularyComplexity": "very simple",
+      "maxUniqueWords": 400,
+      "maxSentenceWords": 8,
+      "minStoryWords": 300,
+      "maxStoryWords": 600,
+      "guidance": "Use very short, simple sentences. No complex metaphors. Lots of repetition for emphasis. Characters should be animals or children the same age. Focus on basic emotions: happy, sad, scared, brave. Always reassure the child.",
+      "preferredCharacters": ["talking animals", "young children age 4-6", "friendly magical creatures"],
+      "preferredSettings": ["home", "garden", "farm", "simple village"],
+      "avoidComplexity": true
+    },
+    "7-9": {
+      "label": "7–9 yosh (O'rta yoshdagi bolalar)",
+      "vocabularyComplexity": "moderate",
+      "maxUniqueWords": 700,
+      "maxSentenceWords": 12,
+      "minStoryWords": 500,
+      "maxStoryWords": 900,
+      "guidance": "Moderate sentence complexity allowed. Can introduce simple metaphors and similes. Characters face real challenges at school, with friends, or in nature. Include some problem-solving and decision-making. Light humour is welcome.",
+      "preferredCharacters": ["children age 7-9", "teachers", "wise elders", "talking animals"],
+      "preferredSettings": ["school", "village", "forest", "marketplace", "family home"],
+      "avoidComplexity": false
+    },
+    "10-12": {
+      "label": "10–12 yosh (Katta yoshdagi bolalar)",
+      "vocabularyComplexity": "rich",
+      "maxUniqueWords": 1000,
+      "maxSentenceWords": 18,
+      "minStoryWords": 700,
+      "maxStoryWords": 1300,
+      "guidance": "Richer vocabulary and sentence structure. Can explore nuanced emotions and moral dilemmas. More complex plot with subplots possible. Characters can be heroes of their own destiny. Can include historical or cultural Uzbek elements. Deeper exploration of values.",
+      "preferredCharacters": ["preteens age 10-12", "historical figures", "wise mentors", "peers"],
+      "preferredSettings": ["city", "ancient Uzbek city", "nature expedition", "historical period"],
+      "avoidComplexity": false
+    }
+  },
+  "lengthProfiles": {
+    "short": {
+      "uzbekLabel": "Qisqa",
+      "minWords": 300,
+      "maxWords": 500,
+      "imagePrompts": { "min": 3, "max": 5 },
+      "videoScenes": { "min": 3, "max": 5 }
+    },
+    "medium": {
+      "uzbekLabel": "O'rta",
+      "minWords": 500,
+      "maxWords": 900,
+      "imagePrompts": { "min": 5, "max": 7 },
+      "videoScenes": { "min": 5, "max": 6 }
+    },
+    "long": {
+      "uzbekLabel": "Uzun",
+      "minWords": 900,
+      "maxWords": 1400,
+      "imagePrompts": { "min": 7, "max": 10 },
+      "videoScenes": { "min": 6, "max": 8 }
+    }
+  }
+}
